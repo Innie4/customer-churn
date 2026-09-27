@@ -412,9 +412,32 @@ async function main(): Promise<void> {
     "it avoids causal language",
     !/\bcaused?\b|\bcausing\b/i.test(str(globalExplanation.note) + JSON.stringify(globalFeatures)),
   );
+
+  // The application returns camelCase here, unlike the per-customer
+  // contributions, which pass the service's field names through unchanged.
+  // Reading the wrong name would make every value 0 and the ordering check
+  // below would pass for the wrong reason, so the values are checked to be real.
+  const importances = globalFeatures.map((entry) => num(obj(entry).meanAbsShap));
+  check(
+    "the leading features report a real, non-zero influence",
+    importances.length > 0 && importances.slice(0, 5).every((value) => value > 0),
+    `top 5: ${importances.slice(0, 5).map((v) => v.toFixed(4)).join(", ")}`,
+  );
+  check(
+    "no influence is negative, which a mean absolute value cannot be",
+    importances.every((value) => value >= 0),
+    `${importances.filter((v) => v < 0).length} negative`,
+  );
+  check(
+    // A tree model that never splits on a feature legitimately scores it zero,
+    // so this is not a failure; it is a note about how many carried weight.
+    "the ranking is ordered by influence, most first",
+    importances.every((value, index) => index === 0 || importances[index - 1] >= value),
+    `${importances.filter((v) => v > 0).length}/${importances.length} features carried weight`,
+  );
   for (const entry of globalFeatures.slice(0, 5)) {
     process.stdout.write(
-      `        ${str(obj(entry).label).padEnd(30)} ${num(obj(entry).mean_abs_shap).toFixed(4)}\n`,
+      `        ${str(obj(entry).label).padEnd(30)} ${num(obj(entry).meanAbsShap).toFixed(4)}\n`,
     );
   }
 

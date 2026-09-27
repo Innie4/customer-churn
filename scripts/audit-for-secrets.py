@@ -89,21 +89,38 @@ BINARY_SUFFIXES = {
 }
 
 
-def pending_files() -> list[Path]:
-    """Every file that would be committed: modified, added or untracked."""
-    result = subprocess.run(
+def target_files() -> list[Path]:
+    """Every file that could be committed: tracked, plus anything untracked.
+
+    Tracked files are included deliberately. Scanning only what is pending would
+    make the guard useless the moment a commit is made, which is exactly when a
+    reviewer stops looking.
+    """
+    files: dict[str, Path] = {}
+
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=ROOT, capture_output=True, text=True, check=True,
+    )
+    for entry in tracked.stdout.split("\0"):
+        if entry:
+            path = ROOT / entry
+            if path.is_file():
+                files[entry] = path
+
+    untracked = subprocess.run(
         ["git", "status", "--porcelain", "-uall"],
         cwd=ROOT, capture_output=True, text=True, check=True,
     )
-    files: list[Path] = []
-    for line in result.stdout.splitlines():
+    for line in untracked.stdout.splitlines():
         raw = line[3:].strip()
         if " -> " in raw:  # a rename: the new name is what matters
             raw = raw.split(" -> ", 1)[1]
         path = ROOT / raw.strip('"')
         if path.is_file():
-            files.append(path)
-    return files
+            files[raw] = path
+
+    return list(files.values())
 
 
 def shannon_entropy(value: str) -> float:
@@ -128,9 +145,9 @@ def looks_random(value: str) -> bool:
 
 
 def main() -> int:
-    files = pending_files()
+    files = target_files()
     if not files:
-        print("Nothing to commit.")
+        print("Nothing to scan.")
         return 0
 
     findings: list[tuple[str, str, str]] = []
@@ -164,7 +181,10 @@ def main() -> int:
                 )
 
     if not findings:
-        print(f"Credential scan clean across {checked} text file(s).")
+        print(
+            f"Credential scan clean across {checked} text file(s) "
+            "(every tracked and untracked file, not just what is pending)."
+        )
         return 0
 
     print(f"{len(findings)} value(s) that look like a real credential:\n")
