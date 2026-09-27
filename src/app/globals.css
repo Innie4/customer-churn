@@ -1,26 +1,162 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Design tokens.
+ *
+ * The palette is deliberately restrained. Colour carries meaning and nothing
+ * else: neutral for ordinary information, a calm green for healthy states,
+ * amber for elevated risk, a restrained red for critical states, and indigo
+ * only where informational emphasis helps.
+ *
+ * There are no gradients, no glassmorphism and no glow. The interface is meant
+ * to read as an analytical tool rather than a landing page.
+ */
+
+@theme {
+  /* Surfaces: a near-white page with a faintly cool panel, so structure is
+     legible without a border on every element. */
+  --color-canvas: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f1f5f9;
+  --color-surface-raised: #ffffff;
+
+  /* Ink */
+  --color-ink: #0f172a;
+  --color-ink-muted: #475569;
+  --color-ink-subtle: #64748b;
+  --color-ink-faint: #94a3b8;
+
+  /* Lines */
+  --color-line: #e2e8f0;
+  --color-line-strong: #cbd5e1;
+
+  /* Meaning: healthy and success */
+  --color-positive: #047857;
+  --color-positive-soft: #ecfdf5;
+  --color-positive-line: #a7f3d0;
+
+  /* Meaning: warning and elevated risk */
+  --color-caution: #b45309;
+  --color-caution-soft: #fffbeb;
+  --color-caution-line: #fde68a;
+
+  /* Meaning: critical, error and high risk */
+  --color-critical: #b91c1c;
+  --color-critical-soft: #fef2f2;
+  --color-critical-line: #fecaca;
+
+  /* Meaning: informational emphasis */
+  --color-info: #4338ca;
+  --color-info-soft: #eef2ff;
+  --color-info-line: #c7d2fe;
+
+  /* Interaction */
+  --color-action: #1d4ed8;
+  --color-action-hover: #1e40af;
+  --color-action-soft: #eff6ff;
+  --color-focus: #2563eb;
+
+  /* Typography scale, tuned for dense analytical content. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.4rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.75rem;
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: 2rem;
+
+  --radius-card: 0.375rem;
+  --radius-control: 0.25rem;
+
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-raised: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+  --shadow-overlay: 0 4px 12px -2px rgb(15 23 42 / 0.12);
+
+  --font-sans: var(--font-interface), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /*
+   * A visible focus ring on every interactive element, always. Removing it
+   * makes the platform unusable by keyboard, which is not a fair trade for
+   * looking tidy.
+   */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Numbers in tables line up when they are tabular. */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Respect a reader who has asked for less motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  ::selection {
+    background-color: var(--color-info-soft);
+    color: var(--color-ink);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Skip link, visible only when focused. */
+  .skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+  }
+
+  .skip-link:focus {
+    left: 0.5rem;
+    top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-control);
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
 }

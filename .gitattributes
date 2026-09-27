@@ -1,0 +1,45 @@
+# Line endings and file handling.
+#
+# Explicit, so the repository means the same thing on every machine rather than
+# depending on each developer's core.autocrlf. Without this, a Windows clone
+# checked out on Linux can produce shell scripts that fail with an invisible
+# carriage return.
+
+# Normalise to LF in the repository, and check out as-is on Unix.
+* text=auto eol=lf
+
+# Source that must never gain a carriage return.
+*.py    text eol=lf
+*.sql   text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.mts   text eol=lf
+*.mjs   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.css   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.txt   text eol=lf
+
+# Windows-only tooling keeps CRLF, because it needs it.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+# Data and generated output: never touched.
+*.csv   -text
+*.joblib -text
+*.pdf   -text
+*.png   -text
+*.jpg   -text
+*.jpeg  -text
+*.webp  -text
+
+# The lockfile is machine-written; leaving it alone avoids a huge diff when a
+# different package manager rewrites it.
+package-lock.json -text
+
+# Nothing in this repository should be executable that is not a script.
+*.md    -diff

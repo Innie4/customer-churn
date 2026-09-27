@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Not part of the application source. The Python service has its own
+    // tooling, and these directories hold generated or third-party content.
+    "ml-service/**",
+    ".data/**",
+    "storage/**",
+    "node_modules/**",
+    "coverage/**",
   ]),
 ]);
 

@@ -6,21 +6,53 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint src db scripts tests",
+    "typecheck": "next typegen && tsc --noEmit",
+    "db:migrate": "tsx db/migrate.ts up",
+    "db:migrate:status": "tsx db/migrate.ts status",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:verify": "tsx scripts/verify-seed.ts",
+    "env:docs": "tsx scripts/generate-env-docs.ts",
+    "secrets:scan": "python scripts/audit-for-secrets.py",
+    "ml:dev": "cd ml-service && python -m uvicorn app.main:app --reload --port 8000",
+    "ml:test": "python -m pytest ml-service/tests -q -p no:warnings",
+    "ml:smoke": "cd ml-service && python scripts/smoke_pipeline.py",
+    "test:e2e:ml": "tsx scripts/e2e-ml.mts",
+    "test:e2e:app": "tsx scripts/e2e-app.mts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "verify": "npm run secrets:scan && npm run typecheck && npm run lint && npm run test && npm run ml:test",
+    "verify:all": "npm run verify && npm run build"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "jose": "^6.2.12",
     "next": "16.3.6",
+    "pdfkit": "^0.20.2",
+    "pg": "^8.23.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^24.19.0",
+    "@types/pdfkit": "^0.17.6",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@vitest/coverage-v8": "^5.0.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
+    "jsdom": "^29.1.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "vitest": "^5.0.2"
   }
 }

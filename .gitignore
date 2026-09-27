@@ -32,6 +32,10 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# The template is generated from src/lib/env-specs.ts and carries no secrets,
+# so it is meant to be committed — it is the documented list of what the
+# application reads.
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +43,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local data. The embedded database, uploaded datasets, generated reports,
+# model artefacts, rendered charts and Python caches are all runtime state,
+# recreated by `npm run db:migrate` and the first upload. Nothing here belongs
+# in version control, and model artefacts in particular are large binaries.
+/.data/
+/storage/
+/.pytest-artifacts/
+/.pytest_cache/
+/ml-service/**/__pycache__/
+*.py[cod]
+ml-service/.venv/
