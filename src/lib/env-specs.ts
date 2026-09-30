@@ -25,6 +25,34 @@ export interface EnvVarSpec {
 
 export const ENV_SPECS: readonly EnvVarSpec[] = [
   {
+    name: "DEMO_ACCOUNT_PASSWORD",
+    required: false,
+    purpose:
+      "Shared password for the demo accounts offered on the sign-in page, " +
+      "which can be opened with one click instead of being typed. When this " +
+      "is unset those accounts are not offered and the endpoint refuses. " +
+      "Set locally only; it must never hold a real credential.",
+    source: "Demo seed script, read back by the demo launcher",
+    usedBy: "Demo sign-in",
+    browserSafe: false,
+  },
+  {
+    name: "SIMULATED_MODE",
+    required: false,
+    purpose:
+      "When 'true', the machine learning service is stood in for by an " +
+      "in-process simulator, so the whole application can be browsed without " +
+      "Python running. Every model metric, probability and explanation is " +
+      "generated rather than learned, and the pages label it as simulated. " +
+      "Nothing else about the application changes: the same pages, data " +
+      "layer, schema, sessions and audit trail are used. Never enable this in " +
+      "production.",
+    source: "Operator",
+    usedBy: "ML client",
+    browserSafe: true,
+    defaultValue: "false",
+  },
+  {
     name: "NODE_ENV",
     required: false,
     purpose: "Runtime mode. Set automatically by the deployment platform.",

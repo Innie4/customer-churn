@@ -25,6 +25,12 @@ const PUBLIC_ROUTES = new Set([
   "/api/auth/session",
   "/api/auth/forgot-password",
   "/api/auth/reset-password",
+  /*
+   * Signs in as a demo account without a password, so the request necessarily
+   * arrives with no session. It is reached only when the deployment is a demo,
+   * and the route itself refuses otherwise; see `src/lib/demo-accounts.ts`.
+   */
+  "/api/auth/demo-sign-in",
 ]);
 
 /** Paths that must never be cached by a shared cache. */

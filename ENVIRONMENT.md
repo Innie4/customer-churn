@@ -25,6 +25,7 @@ That file is the single source of truth for configuration; this table and
 | `SEED_ADMIN_PASSWORD` | no | `—` | no | Seed script | Password for the seeded administrator. Only read by the seed script. |
 | `SESSION_SECRET` | yes | `—` | no | Authentication | Secret used to derive session and cookie signing keys. Must be at least 32 characters. Rotating it invalidates every existing session. |
 | `SESSION_TTL_HOURS` | no | `8` | no | Authentication | How long a session stays valid before the user must sign in again. |
+| `SIMULATED_MODE` | no | `false` | yes | ML client | When 'true', the machine learning service is stood in for by an in-process simulator, so the whole application can be browsed without Python running. Every model metric, probability and explanation is generated rather than learned, and the pages label it as simulated. Nothing else about the application changes: the same pages, data layer, schema, sessions and audit trail are used. Never enable this in production. |
 | `STORAGE_DIR` | no | `storage` | no | File storage | Directory for uploaded datasets, generated reports and chart images. |
 
 ## Notes
