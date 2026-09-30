@@ -76,6 +76,10 @@ export const env = {
   storageDir: readWithDefault("STORAGE_DIR", "storage"),
   maxUploadBytes: readNumber("MAX_UPLOAD_BYTES", 25 * 1024 * 1024),
 
+  get simulatedMode(): boolean {
+    return read("SIMULATED_MODE") === "true";
+  },
+
   mlServiceUrl: readWithDefault("ML_SERVICE_URL", "http://127.0.0.1:8000"),
   mlServiceApiKey: read("ML_SERVICE_API_KEY"),
   mlRequestTimeoutMs: readNumber("ML_REQUEST_TIMEOUT_MS", 600_000),

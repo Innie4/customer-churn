@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Navigation } from "@/components/navigation";
 import { SignOutButton } from "@/components/sign-out-button";
 import { getSession } from "@/lib/auth/session";
+import { env } from "@/lib/env";
 import { ROLE_LABELS } from "@/lib/dal/access";
 
 /**
@@ -36,6 +37,17 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           <p className="text-sm font-semibold text-ink">Churn Intelligence</p>
           <span className="truncate text-2xs text-ink-subtle">{session.email}</span>
         </header>
+        {env.simulatedMode ? (
+          <div
+            role="status"
+            className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-2xs text-amber-900 sm:px-6 lg:px-8"
+          >
+            <strong className="font-semibold">Simulated mode.</strong> No
+            machine learning service is running. Every model metric,
+            probability and SHAP value below is generated, not learned. Treat it
+            as sample data, not as a finding.
+          </div>
+        ) : null}
         <main id="main" className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>

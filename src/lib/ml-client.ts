@@ -14,6 +14,7 @@ import "server-only";
 
 import { AppError } from "./api";
 import { env } from "./env";
+import { simulatedMl } from "./simulate/service";
 
 export interface MlServiceFailure {
   stage: string;
@@ -504,7 +505,13 @@ function csvForm(
   return form;
 }
 
-export const ml = {
+/**
+ * The real HTTP client.
+ *
+ * Kept separate from the exported `ml` so the simulated implementation can be
+ * swapped in without any caller knowing which one it received.
+ */
+const httpMl = {
   health(): Promise<MlServiceHealth> {
     return request<MlServiceHealth>({ stage: "health", path: "/health" });
   },
@@ -648,8 +655,30 @@ export const ml = {
   },
 };
 
+/**
+ * The client the application uses.
+ *
+ * In simulated mode this forwards to the in-process stand-in, which accepts the
+ * same arguments and returns the same types. Every caller is unaware of the
+ * swap, which is the point: the pages, the data layer and the schema are
+ * exercised identically either way.
+ *
+ * Dispatch happens per call rather than once at import, so a test can flip the
+ * flag without having to reload the module graph.
+ */
+export const ml: typeof httpMl = new Proxy(httpMl, {
+  get(target, property, receiver) {
+    const implementation = env.simulatedMode ? simulatedMl : target;
+    const value: unknown = Reflect.get(implementation, property, receiver);
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(implementation)
+      : value;
+  },
+});
+
 /** True when the service answers its health check. Used by the status page. */
 export async function mlServiceReachable(): Promise<MlServiceHealth | null> {
+  if (env.simulatedMode) return simulatedMl.health();
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 4000);

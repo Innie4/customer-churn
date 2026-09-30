@@ -34,6 +34,39 @@ it.
 | Authentication | scrypt password hashing, opaque server-side sessions, role-based authorisation |
 | Validation | Zod at every boundary |
 
+## Browsing the interface without Python
+
+The whole interface can be browsed with no Python installed and nothing
+listening on port 8000. In that mode the machine learning service is stood in
+for by an in-process simulator, and every figure it produces is generated rather
+than learned.
+
+    npm run demo:seed     # build a demo world
+    npm run demo:dev      # start the application in simulated mode
+    npm run demo:reset    # start again from an empty database
+    npm run demo:check    # request every page and report what rendered
+
+demo:seed writes the demo credentials to .data/demo-credentials.txt, which
+is ignored by Git, and demo:dev prints them on start.
+
+Nothing else changes. The pages, the data access layer, the eleven migrations,
+sessions, roles and the audit trail are the same code either way; only the
+outbound call to the Python service is replaced. That means an upload,
+preprocessing, training, prediction, explanation, retention action and report
+can all be performed from the browser with simulated mode on, and the demo data
+is created by the same functions that serve the pages.
+
+Two things are deliberately different, and both are stated on screen:
+
+  - Every model metric, probability and SHAP value is generated. A banner
+    appears on every page, and /api/health reports simulated: true.
+  - The charts are drawn by a small renderer in src/lib/simulate/charts.ts
+    rather than by Matplotlib.
+
+Simulated mode is for looking at the product. It is not evidence that the model
+works, and it must never be enabled in production: the value is read at runtime
+and the health endpoint reports it.
+
 ## Quick start
 
 Prerequisites: Node.js 20+ and Python 3.11+.

@@ -93,14 +93,14 @@ its own without restructuring anything.
 
 ## The database
 
-Eight ordered, checksum-tracked SQL migrations in `db/migrations`. They are
+Eleven ordered, checksum-tracked SQL migrations in `db/migrations`. They are
 plain SQL rather than a generated schema, so a reviewer can read exactly what
 each migration does to the database.
 
 **PGlite** is real PostgreSQL compiled to WebAssembly. It runs the same SQL,
 the same constraints and the same triggers as a managed server, in a process
 with no external dependency. That means the local database and the test database
-behave like production, and the 45 schema tests assert real constraint
+behave like production, and the 46 schema tests assert real constraint
 behaviour rather than a mock's idea of it. Production sets `DATABASE_URL` and
 the same client switches drivers.
 
@@ -116,6 +116,29 @@ development:
 - The audit table is append-only. The only permitted update is setting
   `actor_user_id` to null when the user is deleted, which keeps the log intact
   while not blocking deletion.
+
+
+Two properties of the embedded build shape how it is wired, and both were
+learned the hard way.
+
+**It must not be bundled.** PGlite runs its database in a worker and passes file
+locations across the thread boundary. When the bundler inlines the package those
+locations arrive as a `URL` from another realm, and Node's filesystem API
+rejects them. The failure surfaces as an unhandled rejection, so it points
+nowhere near the database: the API routes keep working, because they do not
+render while the background work is in flight, and only the pages return 500.
+It is opted out of bundling in `next.config.ts`.
+
+**There must be exactly one client.** Next compiles the pages and the route
+handlers into separate bundles, so this module is evaluated once per bundle. A
+module-level cache would therefore yield one PGlite instance per bundle, each
+opening the same data directory; they do not see each other's writes, so a
+session row written by a sign-in request is invisible to the page that renders
+immediately afterwards, which then reports the visitor as signed out. The client
+is therefore cached on `globalThis`, which every bundle in the process shares.
+
+Neither of these is specific to simulated mode. Both are fixed for the platform
+as a whole.
 
 ## The ML service
 
@@ -170,6 +193,35 @@ would have worked in local development and failed in deployment — the kind of
 difference that is invisible until it is too late. The name is resolved strictly
 inside the plot directory on both sides, so a crafted name cannot read anything
 else.
+
+## Running without the ML service
+
+The Python service can be stood in for by an in-process simulator, so the
+interface can be browsed and demonstrated with nothing else running.
+
+The swap happens in one file. src/lib/ml-client.ts exports a client object,
+and in simulated mode that object forwards to src/lib/simulate/service.ts,
+which accepts the same arguments and returns the same types. Every caller,
+including the data access layer, is unaware of the swap. The service's API key
+is never needed, and no HTTP request is made.
+
+What is replaced is only the outbound call. The pages, the data access layer,
+the migrations, sessions, roles, storage and the audit trail are all the same
+code, and the demo data is created by the same functions that serve it, so the
+two cannot drift.
+
+**The figures are generated, not learned.** Customer risk comes from an explicit
+linear model over each customer's own attributes, which gives two things that a
+hand-written fixture cannot. The intercept is solved numerically so the average
+predicted probability equals the churn rate the uploaded file actually shows,
+and a customer's risk terms are the same numbers their explanation is built from,
+so ase value + contributions equals their score on the log-odds scale by
+construction rather than by adjustment. Model metrics are then derived from
+those scores, so the confusion matrix, accuracy, precision, recall, F1, ROC
+curve, AUC and decile lift all describe the same sample and cannot disagree.
+
+The pages do not pretend otherwise. Every page carries a banner, and
+/api/health reports simulated: true alongside its status.
 
 ## The application interface
 

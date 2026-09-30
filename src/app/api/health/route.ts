@@ -9,8 +9,7 @@
 import { NextResponse } from "next/server";
 import { getDatabase } from "../../../../db/client";
 import { mlServiceReachable } from "@/lib/ml-client";
-import { validateConfig } from "@/lib/env";
-
+import { env, validateConfig } from "@/lib/env";
 export const GET = async () => {
   const database = await checkDatabase();
   const ml = await mlServiceReachable();
@@ -23,6 +22,10 @@ export const GET = async () => {
       database: { status: database },
       mlService: {
         status: ml === null ? "unreachable" : "ok",
+        // Whether this is the real service or the in-process stand-in. A
+        // health check that reports only "ok" would hide the fact that nothing
+        // was actually trained, which is the one thing worth knowing here.
+        simulated: env.simulatedMode,
         // The library versions are operationally useful and contain no secrets.
         libraryVersions: ml?.library_versions ?? null,
       },

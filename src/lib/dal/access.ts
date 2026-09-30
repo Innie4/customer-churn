@@ -19,6 +19,7 @@ import {
   getSession,
   type Role,
 } from "../auth/session";
+import { boundActor } from "./actor-context";
 
 export interface Actor {
   id: string;
@@ -36,6 +37,12 @@ export interface Actor {
  * a session is cheap and cached per request by the framework.
  */
 export async function requireActor(): Promise<Actor> {
+  // A server-side script may bind an identity for the length of its task, so
+  // that it can use these functions without a browser session. Nothing in a
+  // request path ever sets one, and the binding refuses to exist in production.
+  const bound = boundActor();
+  if (bound) return bound;
+
   const session = await getSession();
   if (!session) {
     throw AppError.unauthorized(
@@ -48,6 +55,8 @@ export async function requireActor(): Promise<Actor> {
 
 /** Resolve the current actor, or null. For pages that render either way. */
 export async function currentActor(): Promise<Actor | null> {
+  const bound = boundActor();
+  if (bound) return bound;
   const session = await getSession();
   if (!session) return null;
   return {
