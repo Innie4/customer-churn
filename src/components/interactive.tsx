@@ -9,33 +9,19 @@
  */
 
 import type { ReactNode } from "react";
+import {
+  buttonClasses,
+  type ButtonSize,
+  type ButtonVariant,
+} from "./button-styles";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-type ButtonSize = "sm" | "md";
-
-export const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary:
-    "bg-action text-white hover:bg-action-hover border border-transparent disabled:bg-ink-faint",
-  secondary:
-    "bg-surface text-ink border border-line-strong hover:bg-surface-sunken disabled:text-ink-faint",
-  ghost:
-    "bg-transparent text-ink-muted border border-transparent hover:bg-surface-sunken hover:text-ink",
-  danger:
-    "bg-critical text-white hover:brightness-110 border border-transparent disabled:bg-ink-faint",
-};
-
-export const BUTTON_SIZES: Record<ButtonSize, string> = {
-  sm: "px-2.5 py-1 text-xs gap-1.5",
-  md: "px-3 py-1.5 text-sm gap-2",
-};
-
-export function buttonClasses(
-  variant: ButtonVariant = "secondary",
-  size: ButtonSize = "md",
-  className = "",
-): string {
-  return `inline-flex items-center justify-center rounded-control font-medium transition-colors disabled:cursor-not-allowed ${BUTTON_VARIANTS[variant]} ${BUTTON_SIZES[size]} ${className}`;
-}
+export {
+  buttonClasses,
+  BUTTON_SIZES,
+  BUTTON_VARIANTS,
+  type ButtonSize,
+  type ButtonVariant,
+} from "./button-styles";
 
 export function Button({
   children,

@@ -9,7 +9,10 @@
  */
 
 import type { ReactNode } from "react";
-import { buttonClasses } from "./interactive";
+// Imported from the shared style module rather than from "./interactive": this
+// file is a server module, and a server component may render a client component
+// but may not call a function exported from one.
+import { buttonClasses } from "./button-styles";
 
 // ---------------------------------------------------------------------------
 // Layout

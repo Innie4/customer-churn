@@ -223,7 +223,30 @@ async function createPostgres(url: string): Promise<SqlClient> {
   return new PostgresClient(pool as unknown as PgPoolLike);
 }
 
-let cached: Promise<SqlClient> | null = null;
+/**
+ * The shared client, held on `globalThis` rather than in a module variable.
+ *
+ * A module-level cache is not enough here. Next.js compiles the pages and the
+ * route handlers into separate bundles, so this module is evaluated once per
+ * bundle and a module-scoped variable yields one client per bundle. With
+ * PGlite that is worse than a duplicated connection: every instance opens the
+ * same data directory, they do not see each other's writes, and a session row
+ * written by a route handler is invisible to the page that renders straight
+ * afterwards, which then reports the visitor as signed out.
+ *
+ * `globalThis` is shared by every bundle in the process, so the client is
+ * genuinely single. A documented, deliberately ugly global is preferable to a
+ * silent correctness bug.
+ */
+const CACHE_KEY = "__churnDatabaseClient";
+
+interface ClientGlobal {
+  [CACHE_KEY]?: Promise<SqlClient> | null;
+}
+
+function globalCache(): ClientGlobal {
+  return globalThis as unknown as ClientGlobal;
+}
 
 /**
  * Return the shared database client, creating it on first use.
@@ -232,12 +255,13 @@ let cached: Promise<SqlClient> | null = null;
  * does not open a new pool per request.
  */
 export function getDatabase(): Promise<SqlClient> {
-  if (cached) return cached;
+  const holder = globalCache();
+  if (holder[CACHE_KEY]) return holder[CACHE_KEY];
 
   const url = process.env.DATABASE_URL?.trim();
   const usePGlite = process.env.DATABASE_DRIVER === "pglite" || !url;
 
-  cached = (async () => {
+  const pending = (async () => {
     if (usePGlite) {
       return createPGlite();
     }
@@ -253,17 +277,19 @@ export function getDatabase(): Promise<SqlClient> {
     }
   })();
 
+  holder[CACHE_KEY] = pending;
+
   // A failed connection must not poison the cache for the whole process.
-  cached.catch(() => {
-    cached = null;
+  pending.catch(() => {
+    if (holder[CACHE_KEY] === pending) holder[CACHE_KEY] = null;
   });
 
-  return cached;
+  return pending;
 }
 
 /** Discard the cached client. Used by tests between isolated databases. */
 export function resetDatabaseCache(): void {
-  cached = null;
+  globalCache()[CACHE_KEY] = null;
 }
 
 /**
@@ -275,7 +301,7 @@ export function resetDatabaseCache(): void {
  * restores normal behaviour. Nothing in the application calls this.
  */
 export function setDatabaseForTesting(client: SqlClient | null): void {
-  cached = client ? Promise.resolve(client) : null;
+  globalCache()[CACHE_KEY] = client ? Promise.resolve(client) : null;
 }
 
 /**
